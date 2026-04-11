@@ -12,7 +12,7 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # nginx config for React Router (SPA)
-RUN cat > /etc/nginx/conf.d/default.conf << 'EOF'
+RUN mkdir -p /etc/nginx/templates && cat > /etc/nginx/templates/default.conf.template << 'EOF'
 server {
     listen 80;
     root /usr/share/nginx/html;
@@ -20,7 +20,8 @@ server {
 
     # Proxy /api calls to backend
     location /api/ {
-        proxy_pass http://api:8000/api/;
+        proxy_pass ${BACKEND_URL}/api/;
+        proxy_ssl_server_name on;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
