@@ -1,0 +1,22 @@
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/logs/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Env files (never commit real .env)
+.env
+backend/.env
+frontend/.env
+
+# VS Code
+.vscode/settings.json
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,189 @@
+{
+  "folders": [
+    {
+      "name": "RSRank (root)",
+      "path": "."
+    },
+    {
+      "name": "Backend (FastAPI)",
+      "path": "backend"
+    },
+    {
+      "name": "Frontend (React)",
+      "path": "frontend"
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "${workspaceFolder:Backend (FastAPI)}/.venv/Scripts/python.exe",
+    "python.terminal.activateEnvironment": true,
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/.venv": true,
+      "**/node_modules": true,
+      "**/*.pyc": true
+    },
+    "[python]": {
+      "editor.tabSize": 4
+    },
+    "emmet.includeLanguages": {
+      "javascript": "javascriptreact"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.pylance",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "mtxr.sqltools",
+      "mtxr.sqltools-driver-pg",
+      "humao.rest-client"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "FastAPI",
+        "type": "python",
+        "request": "launch",
+        "module": "uvicorn",
+        "args": [
+          "app.main:app",
+          "--reload",
+          "--port",
+          "8000"
+        ],
+        "cwd": "${workspaceFolder:Backend (FastAPI)}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder:Backend (FastAPI)}"
+        },
+        "console": "integratedTerminal"
+      },
+      {
+        "name": "Daily Pipeline",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder:Backend (FastAPI)}/pipeline/daily.py",
+        "cwd": "${workspaceFolder:Backend (FastAPI)}",
+        "console": "integratedTerminal"
+      },
+      {
+        "name": "Monthly Pipeline",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder:Backend (FastAPI)}/pipeline/monthly.py",
+        "cwd": "${workspaceFolder:Backend (FastAPI)}",
+        "console": "integratedTerminal"
+      },
+      {
+        "name": "Setup Database",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder:Backend (FastAPI)}/scripts/setup_db.py",
+        "cwd": "${workspaceFolder:Backend (FastAPI)}",
+        "console": "integratedTerminal"
+      }
+    ],
+    "compounds": [
+      {
+        "name": "Full Stack (API + Frontend)",
+        "configurations": ["FastAPI"]
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Start Backend",
+        "type": "shell",
+        "command": ".venv/Scripts/activate && uvicorn app.main:app --reload --port 8000",
+        "options": {
+          "cwd": "${workspaceFolder:Backend (FastAPI)}"
+        },
+        "group": "build",
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        },
+        "isBackground": true,
+        "problemMatcher": []
+      },
+      {
+        "label": "Start Frontend",
+        "type": "shell",
+        "command": "npm run dev",
+        "options": {
+          "cwd": "${workspaceFolder:Frontend (React)}"
+        },
+        "group": "build",
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        },
+        "isBackground": true,
+        "problemMatcher": []
+      },
+      {
+        "label": "Start Full Stack",
+        "dependsOn": ["Start Backend", "Start Frontend"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "Setup Database",
+        "type": "shell",
+        "command": ".venv/Scripts/activate && python scripts/setup_db.py",
+        "options": {
+          "cwd": "${workspaceFolder:Backend (FastAPI)}"
+        },
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        }
+      },
+      {
+        "label": "Run Daily Pipeline",
+        "type": "shell",
+        "command": ".venv/Scripts/activate && python pipeline/daily.py",
+        "options": {
+          "cwd": "${workspaceFolder:Backend (FastAPI)}"
+        },
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        }
+      },
+      {
+        "label": "Run Monthly Pipeline",
+        "type": "shell",
+        "command": ".venv/Scripts/activate && python pipeline/monthly.py",
+        "options": {
+          "cwd": "${workspaceFolder:Backend (FastAPI)}"
+        },
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        }
+      },
+      {
+        "label": "Install All Dependencies",
+        "type": "shell",
+        "command": "python -m venv .venv && .venv/Scripts/pip install -r requirements.txt",
+        "options": {
+          "cwd": "${workspaceFolder:Backend (FastAPI)}"
+        },
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        }
+      }
+    ]
+  }
+}
