@@ -58,20 +58,6 @@ services:
       - api
     ports:
       - "5173:80"
-  scheduler:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - api
-    command: >
-      sh -c "
-      apk add --no-cache dcron &&
-      echo '0 19 * * * cd /app && python pipeline/daily.py >> /app/logs/cron.log 2>&1' > /etc/crontabs/root &&
-      crond -f
-      "
-    volumes:
-      - ./backend/logs:/app/logs
+
 volumes:
   pgdata:
