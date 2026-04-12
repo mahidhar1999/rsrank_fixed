@@ -302,14 +302,14 @@ def run_pipeline(trade_date: date = None):
     session = _make_session()
 
     try:
-        success = ingest_stock_data(trade_date, session)
-        if not success:
-            print("Pipeline stopped — no stock data for this date.")
-            return
-
         has_index_data = ingest_index_prices(trade_date, session)
         if not has_index_data:
             print("Pipeline stopped - no index data for this date.")
+            return
+    
+        success = ingest_stock_data(trade_date, session)
+        if not success:
+            print("Pipeline stopped — no stock data for this date.")
             return
 
         earliest_ex_date = process_corporate_actions(session)

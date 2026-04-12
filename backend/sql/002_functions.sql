@@ -54,37 +54,55 @@ RETURNS VOID LANGUAGE plpgsql AS $$
 DECLARE lookback INT;
 BEGIN
   FOREACH lookback IN ARRAY ARRAY[65, 125] LOOP
+
+    -- STOCK RETURNS (ALL stocks, no universe filter)
     INSERT INTO returns (entity_type, entity_id, lookback_days, trade_date, return_value)
     SELECT 'stock', curr.stock_id, lookback, p_date,
-      CASE WHEN past.close IS NOT NULL AND past.close > 0
-           THEN ROUND(((curr.close / past.close) - 1)::NUMERIC, 6) ELSE NULL END
+      CASE 
+        WHEN past.close IS NOT NULL AND past.close > 0
+        THEN ROUND(((curr.close / past.close) - 1)::NUMERIC, 6)
+        ELSE NULL 
+      END
     FROM stock_prices curr
     JOIN LATERAL (
-      SELECT sp2.close FROM stock_prices sp2
-      WHERE sp2.stock_id = curr.stock_id AND sp2.trade_date < p_date
-      ORDER BY sp2.trade_date DESC OFFSET (lookback - 1) LIMIT 1
+      SELECT sp2.close 
+      FROM stock_prices sp2
+      WHERE sp2.stock_id = curr.stock_id 
+        AND sp2.trade_date < p_date
+      ORDER BY sp2.trade_date DESC 
+      OFFSET (lookback - 1) LIMIT 1
     ) past ON TRUE
     WHERE curr.trade_date = p_date
-      AND curr.stock_id IN (SELECT stock_id FROM universe_daily WHERE trade_date = p_date)
+
     ON CONFLICT (entity_type, entity_id, lookback_days, trade_date)
     DO UPDATE SET return_value = EXCLUDED.return_value;
 
+
+    -- INDEX RETURNS (unchanged)
     INSERT INTO returns (entity_type, entity_id, lookback_days, trade_date, return_value)
     SELECT 'index', curr.index_id, lookback, p_date,
-      CASE WHEN past.close IS NOT NULL AND past.close > 0
-           THEN ROUND(((curr.close / past.close) - 1)::NUMERIC, 6) ELSE NULL END
+      CASE 
+        WHEN past.close IS NOT NULL AND past.close > 0
+        THEN ROUND(((curr.close / past.close) - 1)::NUMERIC, 6)
+        ELSE NULL 
+      END
     FROM index_prices curr
     JOIN LATERAL (
-      SELECT ip2.close FROM index_prices ip2
-      WHERE ip2.index_id = curr.index_id AND ip2.trade_date < p_date
-      ORDER BY ip2.trade_date DESC OFFSET (lookback - 1) LIMIT 1
+      SELECT ip2.close 
+      FROM index_prices ip2
+      WHERE ip2.index_id = curr.index_id 
+        AND ip2.trade_date < p_date
+      ORDER BY ip2.trade_date DESC 
+      OFFSET (lookback - 1) LIMIT 1
     ) past ON TRUE
     WHERE curr.trade_date = p_date
+
     ON CONFLICT (entity_type, entity_id, lookback_days, trade_date)
     DO UPDATE SET return_value = EXCLUDED.return_value;
-  END LOOP;
-END; $$;
 
+  END LOOP;
+END;
+$$;
 -- ----------------------------------------------------------------
 -- FUNCTION: compute_daily_rs(p_date DATE)
 -- 3-Layer RS computation:
@@ -136,20 +154,39 @@ END; $$;
 CREATE OR REPLACE FUNCTION compute_rs_rankings(p_date DATE)
 RETURNS VOID LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO rs_rankings (stock_id, trade_date, pct_vs_market, pct_vs_sector, sector_pct_vs_market, pct_combined)
-  SELECT stock_id, p_date,
-    ROUND((PERCENT_RANK() OVER (ORDER BY rs_vs_market        NULLS FIRST) * 100)::NUMERIC, 1),
-    ROUND((PERCENT_RANK() OVER (ORDER BY rs_vs_sector        NULLS FIRST) * 100)::NUMERIC, 1),
-    ROUND((PERCENT_RANK() OVER (ORDER BY sector_rs_vs_market NULLS FIRST) * 100)::NUMERIC, 1),
-    ROUND((PERCENT_RANK() OVER (ORDER BY rs_combined         NULLS FIRST) * 100)::NUMERIC, 1)
-  FROM rs_values WHERE trade_date = p_date AND lookback_days = 65
-  ON CONFLICT (stock_id, trade_date)
-  DO UPDATE SET pct_vs_market = EXCLUDED.pct_vs_market,
-                pct_vs_sector = EXCLUDED.pct_vs_sector,
-                sector_pct_vs_market = EXCLUDED.sector_pct_vs_market,
-                pct_combined = EXCLUDED.pct_combined;
-END; $$;
+  INSERT INTO rs_rankings (
+    stock_id, trade_date, 
+    pct_vs_market, pct_vs_sector, 
+    sector_pct_vs_market, pct_combined
+  )
+  SELECT 
+    rv.stock_id, 
+    p_date,
 
+    ROUND((PERCENT_RANK() OVER (ORDER BY rv.rs_vs_market        NULLS FIRST) * 100)::NUMERIC, 1),
+    ROUND((PERCENT_RANK() OVER (ORDER BY rv.rs_vs_sector        NULLS FIRST) * 100)::NUMERIC, 1),
+    ROUND((PERCENT_RANK() OVER (ORDER BY rv.sector_rs_vs_market NULLS FIRST) * 100)::NUMERIC, 1),
+    ROUND((PERCENT_RANK() OVER (ORDER BY rv.rs_combined         NULLS FIRST) * 100)::NUMERIC, 1)
+
+  FROM rs_values rv
+
+  -- ✅ APPLY UNIVERSE FILTER HERE ONLY
+  JOIN universe_daily u
+    ON u.stock_id = rv.stock_id
+   AND u.trade_date = p_date
+
+  WHERE rv.trade_date = p_date 
+    AND rv.lookback_days = 65
+
+  ON CONFLICT (stock_id, trade_date)
+  DO UPDATE SET 
+    pct_vs_market = EXCLUDED.pct_vs_market,
+    pct_vs_sector = EXCLUDED.pct_vs_sector,
+    sector_pct_vs_market = EXCLUDED.sector_pct_vs_market,
+    pct_combined = EXCLUDED.pct_combined;
+
+END;
+$$;
 -- ----------------------------------------------------------------
 -- FUNCTION: compute_rs_acceleration(p_date DATE)
 -- ΔRS = RS_today - RS_10_trading_days_ago
@@ -157,26 +194,47 @@ END; $$;
 CREATE OR REPLACE FUNCTION compute_rs_acceleration(p_date DATE)
 RETURNS VOID LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO rs_acceleration (stock_id, trade_date, delta_rs_market, delta_rs_sector, delta_combined)
-  SELECT curr.stock_id, p_date,
+  INSERT INTO rs_acceleration (
+    stock_id, trade_date, 
+    delta_rs_market, delta_rs_sector, delta_combined
+  )
+  SELECT 
+    curr.stock_id, 
+    p_date,
+
     ROUND((curr.rs_vs_market - past.rs_vs_market)::NUMERIC, 4),
     ROUND((curr.rs_vs_sector - past.rs_vs_sector)::NUMERIC, 4),
     ROUND((curr.rs_combined  - past.rs_combined )::NUMERIC, 4)
-  FROM rs_values curr
-  JOIN LATERAL (
-    SELECT rs2.rs_vs_market, rs2.rs_vs_sector, rs2.rs_combined
-    FROM rs_values rs2
-    WHERE rs2.stock_id = curr.stock_id AND rs2.lookback_days = 65
-      AND rs2.trade_date < p_date AND rs2.rs_combined IS NOT NULL
-    ORDER BY rs2.trade_date DESC OFFSET 9 LIMIT 1
-  ) past ON TRUE
-  WHERE curr.trade_date = p_date AND curr.lookback_days = 65 AND curr.rs_combined IS NOT NULL
-  ON CONFLICT (stock_id, trade_date)
-  DO UPDATE SET delta_rs_market = EXCLUDED.delta_rs_market,
-                delta_rs_sector = EXCLUDED.delta_rs_sector,
-                delta_combined  = EXCLUDED.delta_combined;
-END; $$;
 
+  FROM rs_values curr
+
+  JOIN LATERAL (
+    SELECT 
+      rs2.rs_vs_market, 
+      rs2.rs_vs_sector, 
+      rs2.rs_combined
+    FROM rs_values rs2
+    WHERE rs2.stock_id = curr.stock_id 
+      AND rs2.lookback_days = 65
+      AND rs2.trade_date < p_date
+      AND rs2.rs_combined IS NOT NULL
+      AND rs2.rs_vs_market IS NOT NULL   -- ✅ added safety
+    ORDER BY rs2.trade_date DESC 
+    OFFSET 9 LIMIT 1
+  ) past ON TRUE
+
+  WHERE curr.trade_date = p_date 
+    AND curr.lookback_days = 65 
+    AND curr.rs_combined IS NOT NULL
+
+  ON CONFLICT (stock_id, trade_date)
+  DO UPDATE SET 
+    delta_rs_market = EXCLUDED.delta_rs_market,
+    delta_rs_sector = EXCLUDED.delta_rs_sector,
+    delta_combined  = EXCLUDED.delta_combined;
+
+END;
+$$;
 -- ----------------------------------------------------------------
 -- FUNCTION: compute_leadership_stability(p_date DATE)
 -- % of last 30 trading days the stock ranked in top 30th pct
@@ -184,22 +242,43 @@ END; $$;
 CREATE OR REPLACE FUNCTION compute_leadership_stability(p_date DATE)
 RETURNS VOID LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO leadership_stability_30d (stock_id, trade_date, stability_score)
-  SELECT u.stock_id, p_date,
-    ROUND((100.0 * SUM(CASE WHEN rr.pct_combined >= 70 THEN 1 ELSE 0 END)::NUMERIC
-               / NULLIF(COUNT(*), 0)), 1)
+  INSERT INTO leadership_stability_30d (
+    stock_id, trade_date, stability_score
+  )
+  SELECT 
+    u.stock_id, 
+    p_date,
+
+    ROUND(
+      (
+        100.0 * SUM(CASE WHEN rr.pct_combined >= 70 THEN 1 ELSE 0 END)::NUMERIC
+        / NULLIF(COUNT(*), 0)
+      ), 
+      1
+    ) AS stability_score
+
   FROM universe_daily u
+
   JOIN LATERAL (
-    SELECT pct_combined FROM rs_rankings
-    WHERE stock_id = u.stock_id AND trade_date <= p_date
-    ORDER BY trade_date DESC LIMIT 30
+    SELECT pct_combined 
+    FROM rs_rankings
+    WHERE stock_id = u.stock_id 
+      AND trade_date <= p_date
+    ORDER BY trade_date DESC 
+    LIMIT 30
   ) rr ON TRUE
+
   WHERE u.trade_date = p_date
+
   GROUP BY u.stock_id
+
+  HAVING COUNT(*) >= 15   -- ✅ important fix
+
   ON CONFLICT (stock_id, trade_date)
   DO UPDATE SET stability_score = EXCLUDED.stability_score;
-END; $$;
 
+END;
+$$;
 -- ----------------------------------------------------------------
 -- FUNCTION: compute_daily_metrics(p_date DATE)
 -- Master orchestrator — call this from Python pipeline
@@ -207,13 +286,34 @@ END; $$;
 CREATE OR REPLACE FUNCTION compute_daily_metrics(p_date DATE)
 RETURNS TEXT LANGUAGE plpgsql AS $$
 BEGIN
+
+    -- ✅ Skip non-trading days (critical fix)
+    IF NOT EXISTS (
+        SELECT 1 FROM index_prices WHERE trade_date = p_date
+    ) THEN
+        RETURN 'SKIPPED: non-trading day ' || p_date::TEXT;
+    END IF;
+
+    -- Step 1: Build universe (only for ranking layer)
     PERFORM build_universe(p_date);
+
+    -- Step 2: Compute returns (ALL stocks)
     PERFORM compute_daily_returns(p_date);
+
+    -- Step 3: Compute RS (ALL stocks)
     PERFORM compute_daily_rs(p_date);
+
+    -- Step 4: Rankings (filtered by universe)
     PERFORM compute_rs_rankings(p_date);
+
+    -- Step 5: Acceleration
     PERFORM compute_rs_acceleration(p_date);
+
+    -- Step 6: Stability
     PERFORM compute_leadership_stability(p_date);
+
     RETURN 'OK: computed metrics for ' || p_date::TEXT;
+
 END;
 $$;
 
@@ -244,24 +344,30 @@ BEGIN
         IF rec.action_type = 'BONUS' THEN
             v_adjustment := rec.ratio_old::NUMERIC
                           / (rec.ratio_old + rec.ratio_new)::NUMERIC;
+
         ELSIF rec.action_type = 'SPLIT' THEN
             v_adjustment := rec.ratio_old::NUMERIC / rec.ratio_new::NUMERIC;
+
         ELSE
             CONTINUE;
         END IF;
 
-        -- Adjust all prices BEFORE ex_date
-        UPDATE stock_prices
-        SET    close = ROUND(close * v_adjustment, 4)
-        WHERE  stock_id   = v_stock_id
-          AND  trade_date < rec.ex_date;
-
+        -- ✅ Mark processed FIRST (prevents double execution)
         UPDATE corporate_actions
-        SET    processed    = TRUE,
-               processed_at = NOW()
-        WHERE  id = rec.id;
+        SET processed    = TRUE,
+            processed_at = NOW()
+        WHERE id = rec.id;
 
-        RAISE NOTICE 'Applied % for % (factor: %)', rec.action_type, rec.symbol, v_adjustment;
+        -- ✅ Adjust historical prices
+        UPDATE stock_prices
+        SET 
+            close  = ROUND(close * v_adjustment, 4),
+            volume = ROUND(volume / v_adjustment)   -- 🔥 important fix
+        WHERE stock_id   = v_stock_id
+          AND trade_date < rec.ex_date;
+
+        RAISE NOTICE 'Applied % for % (factor: %)', 
+            rec.action_type, rec.symbol, v_adjustment;
     END LOOP;
 END;
 $$;
