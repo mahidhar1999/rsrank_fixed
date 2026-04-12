@@ -19,4 +19,4 @@ COPY . .
 RUN mkdir -p logs
 
 # 🔥 RUN PIPELINE (instead of uvicorn)
-CMD ["python", "pipeline/daily.py"]
+CMD ["python", "-m", "pipeline.daily"]
