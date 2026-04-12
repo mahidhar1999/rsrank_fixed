@@ -13,7 +13,7 @@ import pandas as pd
 from datetime import datetime, date, timedelta
 from io import StringIO
 from sqlalchemy import text
-from pipeline.mailer import send_email
+#from pipeline.mailer import send_email
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -321,7 +321,7 @@ def run_pipeline(trade_date: date = None):
 
         msg = f"RSRank pipeline completed successfully for {trade_date}"
         print(msg)
-        send_email("✅ RSRank Pipeline Success", msg)
+        #send_email("✅ RSRank Pipeline Success", msg)
         
     except Exception as e:
         print(f"\n❌ Pipeline failed: {e}")
