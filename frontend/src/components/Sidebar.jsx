@@ -54,12 +54,12 @@ export default function Sidebar() {
                   <div style={{ fontSize: 10, color: 'var(--txt3)' }}>{isPro ? '✦ Pro' : 'Free plan'}</div>
                 </div>
               </div>
-              {!isPro && (
+              {/*!isPro && (
                 <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: 6, fontSize: 12 }}
                   onClick={() => navigate('/pricing')}>
                   Upgrade to Pro
                 </button>
-              )}
+              )*/}
               <button className="btn" style={{ width: '100%', justifyContent: 'center', fontSize: 12 }} onClick={logout}>
                 Sign out
               </button>
@@ -172,6 +172,7 @@ function MobileDrawer({ open, onClose, user }) {
         <DrawerLabel label="Analysis" />
         <DrawerItem label="Acceleration" Icon={TrendIcon} onClick={() => go('/acceleration')} />
         <DrawerItem label="Leadership" Icon={StarIcon} onClick={() => go('/leadership')} />
+        {/*
         {!isPro && (
           <DrawerItem
             label="Pricing"
@@ -179,6 +180,7 @@ function MobileDrawer({ open, onClose, user }) {
             onClick={() => go('/pricing')}
           />
         )}
+        */}
       </div>
 
       {/* Account section */}
