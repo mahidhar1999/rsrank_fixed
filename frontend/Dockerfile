@@ -20,7 +20,7 @@ server {
 
     # Proxy /api calls to backend
     location /api/ {
-        proxy_pass https://rsrankfixed-production.up.railway.app/api/;
+        proxy_pass https://rsrankfixed-production.up.railway.app;
         proxy_ssl_server_name on;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
