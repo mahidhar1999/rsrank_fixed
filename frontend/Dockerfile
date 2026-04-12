@@ -17,7 +17,9 @@ server {
     listen 80;
     root /usr/share/nginx/html;
     index index.html;
-
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
     # Proxy /api calls to backend
     location /api/ {
         proxy_pass https://rsrankfixed-production.up.railway.app;
