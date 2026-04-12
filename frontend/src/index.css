@@ -252,7 +252,6 @@ select {
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  touch-action: pan-x pinch-zoom;
 }
 
 .data-table {
@@ -721,7 +720,6 @@ select {
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    touch-action: pan-x pinch-zoom;
   }
 
   /* Heatmap font smaller */
@@ -772,7 +770,6 @@ select {
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    touch-action: pan-x pinch-zoom;
   }
 
   /* Topbar avatar only on mobile */
