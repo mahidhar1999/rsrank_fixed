@@ -18,6 +18,13 @@ def leadership(
         row = db.execute(text("SELECT MAX(trade_date) as d FROM leadership_stability_30d")).first()
         trade_date = str(row.d) if row and row.d else "2024-01-01"
 
+    total = db.execute(text("""
+        SELECT COUNT(*)
+        FROM leadership_stability_30d ls
+        WHERE ls.trade_date = :d
+          AND ls.stability_score >= :min_s
+    """), {"d": trade_date, "min_s": min_stability}).scalar() or 0
+
     rows = db.execute(text("""
         SELECT
             sm.symbol, sm.company_name,
@@ -42,6 +49,8 @@ def leadership(
     return {
         "trade_date": trade_date,
         "min_stability": min_stability,
+        "total": int(total),
+        "limit": limit,
         "stocks": [
             {
                 "symbol": r["symbol"],

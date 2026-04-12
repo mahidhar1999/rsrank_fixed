@@ -112,30 +112,17 @@ function MobileBottomNav() {
   const location = useLocation()
   const [drawerOpen, setDrawer] = useState(false)
 
-  // Prevent background page from scrolling when the drawer is open (mobile Safari/Chrome friendly).
+  // Lock background scroll without freezing the drawer itself on mobile browsers.
   useEffect(() => {
-    if (!drawerOpen) return
-
+    const root = document.documentElement
     const body = document.body
-    const scrollY = window.scrollY || 0
-    const prev = {
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
-      overflow: body.style.overflow,
-    }
 
-    body.style.position = 'fixed'
-    body.style.top = `-${scrollY}px`
-    body.style.width = '100%'
-    body.style.overflow = 'hidden'
+    root.classList.toggle('mobile-nav-open', drawerOpen)
+    body.classList.toggle('mobile-nav-open', drawerOpen)
 
     return () => {
-      body.style.position = prev.position
-      body.style.top = prev.top
-      body.style.width = prev.width
-      body.style.overflow = prev.overflow
-      window.scrollTo(0, scrollY)
+      root.classList.remove('mobile-nav-open')
+      body.classList.remove('mobile-nav-open')
     }
   }, [drawerOpen])
 

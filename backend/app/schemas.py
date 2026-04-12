@@ -171,6 +171,9 @@ class LeadershipStock(BaseModel):
 
 class LeadershipResponse(BaseModel):
     trade_date: date
+    min_stability: Optional[float] = None
+    total: Optional[int] = None
+    limit: Optional[int] = None
     stocks: List[LeadershipStock]
 
 
