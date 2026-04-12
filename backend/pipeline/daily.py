@@ -14,8 +14,9 @@ from datetime import datetime, date, timedelta
 from io import StringIO
 from sqlalchemy import text
 from pipeline.mailer import send_email
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 try:
     from app.db import engine
