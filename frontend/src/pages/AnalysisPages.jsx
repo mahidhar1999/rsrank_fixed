@@ -5,7 +5,7 @@ import Topbar from '../components/Topbar'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 export function Acceleration() {
-  const [data, setData]   = useState(null)
+  const [data, setData] = useState(null)
   const [loading, setLoad] = useState(true)
 
   useEffect(() => {
@@ -13,7 +13,7 @@ export function Acceleration() {
   }, [])
 
   const emerging = data?.emerging || []
-  const fading   = data?.fading   || []
+  const fading = data?.fading || []
 
   return (
     <div className="main-content">
@@ -29,19 +29,21 @@ export function Acceleration() {
               <span className="pill pill-green">{emerging.length}</span>
             </div>
             {loading ? <div className="loading-center"><div className="spinner" /></div> : (
-              <table className="data-table">
-                <thead><tr><th>Symbol</th><th>Sector</th><th>RS Score</th><th>10D Delta</th></tr></thead>
-                <tbody>
-                  {emerging.map(s => (
-                    <tr key={s.symbol}>
-                      <td><span className="mono" style={{ fontWeight: 500 }}>{s.symbol}</span></td>
-                      <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{s.sector || '—'}</td>
-                      <td><span className="mono">{s.rs_combined?.toFixed(3)}</span></td>
-                      <td><span className="mono pos">+{s.delta_combined?.toFixed(4)}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="table-scroll">
+                <table className="data-table">
+                  <thead><tr><th>Symbol</th><th>Sector</th><th>RS Score</th><th>10D Delta</th></tr></thead>
+                  <tbody>
+                    {emerging.map(s => (
+                      <tr key={s.symbol}>
+                        <td><span className="mono" style={{ fontWeight: 500 }}>{s.symbol}</span></td>
+                        <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{s.sector || '—'}</td>
+                        <td><span className="mono">{s.rs_combined?.toFixed(3)}</span></td>
+                        <td><span className="mono pos">+{s.delta_combined?.toFixed(4)}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
@@ -52,19 +54,21 @@ export function Acceleration() {
               <span className="pill pill-red">{fading.length}</span>
             </div>
             {loading ? <div className="loading-center"><div className="spinner" /></div> : (
-              <table className="data-table">
-                <thead><tr><th>Symbol</th><th>Sector</th><th>RS Score</th><th>10D Delta</th></tr></thead>
-                <tbody>
-                  {fading.map(s => (
-                    <tr key={s.symbol}>
-                      <td><span className="mono" style={{ fontWeight: 500 }}>{s.symbol}</span></td>
-                      <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{s.sector || '—'}</td>
-                      <td><span className="mono">{s.rs_combined?.toFixed(3)}</span></td>
-                      <td><span className="mono neg">{s.delta_combined?.toFixed(4)}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="table-scroll">
+                <table className="data-table">
+                  <thead><tr><th>Symbol</th><th>Sector</th><th>RS Score</th><th>10D Delta</th></tr></thead>
+                  <tbody>
+                    {fading.map(s => (
+                      <tr key={s.symbol}>
+                        <td><span className="mono" style={{ fontWeight: 500 }}>{s.symbol}</span></td>
+                        <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{s.sector || '—'}</td>
+                        <td><span className="mono">{s.rs_combined?.toFixed(3)}</span></td>
+                        <td><span className="mono neg">{s.delta_combined?.toFixed(4)}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
@@ -78,7 +82,7 @@ export function Acceleration() {
                 layout="vertical"
                 data={[...emerging.slice(0, 10), ...fading.slice(0, 10)].map(s => ({
                   symbol: s.symbol,
-                  delta:  parseFloat((s.delta_combined || 0).toFixed(4)),
+                  delta: parseFloat((s.delta_combined || 0).toFixed(4)),
                 }))}
               >
                 <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => v.toFixed(3)} />
@@ -102,7 +106,7 @@ export function Acceleration() {
 
 // ── Leadership Page ───────────────────────────────────────────────
 export function Leadership() {
-  const [data, setData]   = useState(null)
+  const [data, setData] = useState(null)
   const [loading, setLoad] = useState(true)
   const [minStab, setMin] = useState(60)
 
@@ -138,30 +142,32 @@ export function Leadership() {
             <span className="pill pill-blue">{data?.stocks?.length || 0} stocks</span>
           </div>
           {loading ? <div className="loading-center"><div className="spinner" /></div> : (
-            <table className="data-table">
-              <thead>
-                <tr><th>#</th><th>Symbol</th><th>Sector</th><th>Stability</th><th>RS Score</th><th>Pct</th></tr>
-              </thead>
-              <tbody>
-                {data?.stocks?.map((s, i) => (
-                  <tr key={s.symbol}>
-                    <td style={{ color: 'var(--txt3)', fontSize: 11 }}>{i + 1}</td>
-                    <td><span className="mono" style={{ fontWeight: 500 }}>{s.symbol}</span></td>
-                    <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{s.sector || '—'}</td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div style={{ width: 50, height: 4, background: 'var(--bg2)', borderRadius: 2, overflow: 'hidden' }}>
-                          <div style={{ width: `${s.stability_score || 0}%`, height: '100%', background: 'var(--green)', borderRadius: 2 }} />
+            <div className="table-scroll">
+              <table className="data-table">
+                <thead>
+                  <tr><th>#</th><th>Symbol</th><th>Sector</th><th>Stability</th><th>RS Score</th><th>Pct</th></tr>
+                </thead>
+                <tbody>
+                  {data?.stocks?.map((s, i) => (
+                    <tr key={s.symbol}>
+                      <td style={{ color: 'var(--txt3)', fontSize: 11 }}>{i + 1}</td>
+                      <td><span className="mono" style={{ fontWeight: 500 }}>{s.symbol}</span></td>
+                      <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{s.sector || '—'}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ width: 50, height: 4, background: 'var(--bg2)', borderRadius: 2, overflow: 'hidden' }}>
+                            <div style={{ width: `${s.stability_score || 0}%`, height: '100%', background: 'var(--green)', borderRadius: 2 }} />
+                          </div>
+                          <span className="mono" style={{ fontSize: 11 }}>{s.stability_score?.toFixed(0)}%</span>
                         </div>
-                        <span className="mono" style={{ fontSize: 11 }}>{s.stability_score?.toFixed(0)}%</span>
-                      </div>
-                    </td>
-                    <td><span className="mono pos">{s.rs_combined?.toFixed(3)}</span></td>
-                    <td><span className="pill pill-green">{s.pct_combined?.toFixed(0)}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                      <td><span className="mono pos">{s.rs_combined?.toFixed(3)}</span></td>
+                      <td><span className="pill pill-green">{s.pct_combined?.toFixed(0)}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 

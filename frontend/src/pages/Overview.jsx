@@ -7,10 +7,10 @@ import {
 } from 'recharts'
 
 export default function Overview() {
-  const [summary, setSummary]   = useState(null)
+  const [summary, setSummary] = useState(null)
   const [rankings, setRankings] = useState(null)
-  const [sectors,  setSectors]  = useState(null)
-  const [loading,  setLoading]  = useState(true)
+  const [sectors, setSectors] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     Promise.all([
@@ -49,7 +49,7 @@ export default function Overview() {
                 <div className="card-sub">65D × 0.75 + 125D × 0.25 vs Nifty 50</div>
               </div>
             </div>
-            <div>
+            <div className="table-scroll">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -127,8 +127,8 @@ function MetricCard({ label, val, change, color, note, suffix = '' }) {
 }
 
 function SectorBar({ sector }) {
-  const rs   = sector.rs_65d || 0
-  const pct  = Math.max(0, Math.min(100, (rs / 1.5) * 100))
+  const rs = sector.rs_65d || 0
+  const pct = Math.max(0, Math.min(100, (rs / 1.5) * 100))
   const color = rs >= 1.1 ? 'var(--green)' : rs >= 0.95 ? 'var(--blue)' : 'var(--red)'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -148,9 +148,9 @@ function SectorBar({ sector }) {
 function BreadthChart({ leaders = 0, laggards = 0, neutral = 0 }) {
   const total = leaders + laggards + neutral || 1
   const data = [
-    { name: 'Leaders', value: leaders,  fill: '#1D9E75' },
-    { name: 'Neutral', value: neutral,  fill: '#9c9a92' },
-    { name: 'Laggards',value: laggards, fill: '#E24B4A' },
+    { name: 'Leaders', value: leaders, fill: '#1D9E75' },
+    { name: 'Neutral', value: neutral, fill: '#9c9a92' },
+    { name: 'Laggards', value: laggards, fill: '#E24B4A' },
   ]
   return (
     <div>

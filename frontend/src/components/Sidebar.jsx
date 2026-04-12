@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -19,10 +19,21 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="sidebar-desktop" style={{
-        background: 'var(--bg0)', borderRight: '0.5px solid var(--border)',
-        flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, overflowY: 'auto',
-      }}>
+      <aside
+        className="sidebar-desktop"
+        style={{
+          background: 'var(--bg0)',
+          borderRight: '0.5px solid var(--border)',
+          flexDirection: 'column',
+
+          height: '100vh',          // ✅ FIXED HEIGHT
+          overflowY: 'auto',        // ✅ ENABLE SCROLL
+          position: 'sticky',       // ✅ STICKY BACK (safe now)
+          top: 0,
+
+          flexShrink: 0,
+        }}
+      >
         {/* Logo */}
         <div style={{ padding: '20px', borderBottom: '0.5px solid var(--border)' }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px' }}>
@@ -101,6 +112,33 @@ function MobileBottomNav() {
   const location = useLocation()
   const [drawerOpen, setDrawer] = useState(false)
 
+  // Prevent background page from scrolling when the drawer is open (mobile Safari/Chrome friendly).
+  useEffect(() => {
+    if (!drawerOpen) return
+
+    const body = document.body
+    const scrollY = window.scrollY || 0
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    }
+
+    body.style.position = 'fixed'
+    body.style.top = `-${scrollY}px`
+    body.style.width = '100%'
+    body.style.overflow = 'hidden'
+
+    return () => {
+      body.style.position = prev.position
+      body.style.top = prev.top
+      body.style.width = prev.width
+      body.style.overflow = prev.overflow
+      window.scrollTo(0, scrollY)
+    }
+  }, [drawerOpen])
+
   // Bottom nav shows 4 primary items + "More" drawer
   const PRIMARY = NAV.slice(0, 4)
 
@@ -145,15 +183,7 @@ function MobileDrawer({ open, onClose, user }) {
   const go = (path) => { navigate(path); onClose() }
 
   return (
-    <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0,
-      background: 'var(--bg0)', borderRadius: '16px 16px 0 0',
-      border: '0.5px solid var(--border)',
-      zIndex: 201, padding: '0 0 calc(env(safe-area-inset-bottom) + 8px)',
-      transform: open ? 'translateY(0)' : 'translateY(100%)',
-      transition: 'transform 0.28s cubic-bezier(0.32,0.72,0,1)',
-      maxHeight: '80vh', overflowY: 'auto',
-    }}>
+    <div className={`mobile-drawer ${open ? 'open' : ''}`}>
       {/* Handle */}
       <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--bg3)' }} />
@@ -172,15 +202,7 @@ function MobileDrawer({ open, onClose, user }) {
         <DrawerLabel label="Analysis" />
         <DrawerItem label="Acceleration" Icon={TrendIcon} onClick={() => go('/acceleration')} />
         <DrawerItem label="Leadership" Icon={StarIcon} onClick={() => go('/leadership')} />
-        {/*
-        {!isPro && (
-          <DrawerItem
-            label="Pricing"
-            Icon={DiamondIcon}
-            onClick={() => go('/pricing')}
-          />
-        )}
-        */}
+        {/*<DrawerItem label="Pricing" Icon={DiamondIcon} onClick={() => go('/pricing')} />*/}
       </div>
 
       {/* Account section */}
@@ -200,14 +222,14 @@ function MobileDrawer({ open, onClose, user }) {
                 <span className={`pill ${isPro ? 'pill-green' : 'pill-gray'}`}>{isPro ? 'Pro' : 'Free'}</span>
               </div>
             </div>
-            {!isPro && (
+            {/*!isPro && (
               <div style={{ padding: '0 16px 8px' }}>
                 <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}
                   onClick={() => go('/pricing')}>
                   Upgrade to Pro — ₹499/mo
                 </button>
               </div>
-            )}
+            )*/}
             <DrawerItem label="Sign out" Icon={SignOutIcon} onClick={() => { logout(); onClose() }} danger />
           </>
         ) : (

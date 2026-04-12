@@ -5,8 +5,8 @@ import Topbar from '../components/Topbar'
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip } from 'recharts'
 
 export default function Sectors() {
-  const [data, setData]     = useState(null)
-  const [loading, setLoad]  = useState(true)
+  const [data, setData] = useState(null)
+  const [loading, setLoad] = useState(true)
 
   useEffect(() => {
     sectorsAPI.rotation().then(setData).finally(() => setLoad(false))
@@ -29,28 +29,30 @@ export default function Sectors() {
               <div className="loading-center"><div className="spinner" /></div>
             ) : (
               <div className="card-body" style={{ padding: 0 }}>
-                <table className="data-table">
-                  <thead>
-                    <tr><th>Sector</th><th>RS 65D</th><th>RS 125D</th><th>Trend</th><th>Stocks</th></tr>
-                  </thead>
-                  <tbody>
-                    {sectors.map(s => {
-                      const rs = s.rs_65d || 0
-                      const color = rs >= 1.1 ? 'var(--green)' : rs >= 0.95 ? 'var(--blue)' : 'var(--red)'
-                      const arrow = s.trend === 'up' ? '▲' : s.trend === 'down' ? '▼' : '—'
-                      const arrowCol = s.trend === 'up' ? 'var(--green)' : s.trend === 'down' ? 'var(--red)' : 'var(--txt3)'
-                      return (
-                        <tr key={s.index_name}>
-                          <td style={{ fontSize: 12 }}>{s.index_name.replace('Nifty ', '')}</td>
-                          <td><span className="mono" style={{ color }}>{s.rs_65d?.toFixed(3) || '—'}</span></td>
-                          <td><span className="mono" style={{ color: 'var(--txt2)', fontSize: 11 }}>{s.rs_125d?.toFixed(3) || '—'}</span></td>
-                          <td><span style={{ color: arrowCol, fontSize: 13 }}>{arrow}</span></td>
-                          <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{s.stock_count}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                <div className="table-scroll">
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Sector</th><th>RS 65D</th><th>RS 125D</th><th>Trend</th><th>Stocks</th></tr>
+                    </thead>
+                    <tbody>
+                      {sectors.map(s => {
+                        const rs = s.rs_65d || 0
+                        const color = rs >= 1.1 ? 'var(--green)' : rs >= 0.95 ? 'var(--blue)' : 'var(--red)'
+                        const arrow = s.trend === 'up' ? '▲' : s.trend === 'down' ? '▼' : '—'
+                        const arrowCol = s.trend === 'up' ? 'var(--green)' : s.trend === 'down' ? 'var(--red)' : 'var(--txt3)'
+                        return (
+                          <tr key={s.index_name}>
+                            <td style={{ fontSize: 12 }}>{s.index_name.replace('Nifty ', '')}</td>
+                            <td><span className="mono" style={{ color }}>{s.rs_65d?.toFixed(3) || '—'}</span></td>
+                            <td><span className="mono" style={{ color: 'var(--txt2)', fontSize: 11 }}>{s.rs_125d?.toFixed(3) || '—'}</span></td>
+                            <td><span style={{ color: arrowCol, fontSize: 13 }}>{arrow}</span></td>
+                            <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{s.stock_count}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>

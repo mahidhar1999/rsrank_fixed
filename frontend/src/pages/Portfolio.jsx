@@ -65,7 +65,7 @@ export default function Portfolio() {
       <Topbar title="Model Portfolio" />
       <div className="page-body">
 
-        {perf && (
+        {/*perf && (
           <div className="metrics-row">
             <div className="metric-card">
               <div className="metric-label">Portfolio Since 2024</div>
@@ -87,9 +87,9 @@ export default function Portfolio() {
               <div className="metric-change" style={{ color: 'var(--txt3)' }}>Equal weight 2% each</div>
             </div>
           </div>
-        )}
-
-        <PaywallGate preview={<PerformancePlaceholder />}>
+        )*/}
+        {/*
+       <PaywallGate preview={<PerformancePlaceholder />}>
           {perf && (
             <div className="card">
               <div className="card-head">
@@ -114,7 +114,7 @@ export default function Portfolio() {
               </div>
             </div>
           )}
-        </PaywallGate>
+        </PaywallGate>*/}
 
         <PaywallGate
           preview={preview && <PreviewHoldings preview={preview} />}
@@ -128,30 +128,32 @@ export default function Portfolio() {
                 </div>
                 <span className="pill pill-green">{holdings.holdings?.length} stocks</span>
               </div>
-              <table className="data-table">
-                <thead>
-                  <tr><th>#</th><th>Symbol</th><th>Sector</th><th>RS Score</th><th>Pct</th><th>Close</th><th>Weight</th></tr>
-                </thead>
-                <tbody>
-                  {holdings.holdings?.map(h => (
-                    <tr key={h.symbol}>
-                      <td style={{ color: 'var(--txt3)', fontSize: 11 }}>{h.rank}</td>
-                      <td><span className="mono" style={{ fontWeight: 500 }}>{h.symbol}</span></td>
-                      <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{h.sector || '-'}</td>
-                      <td><span className="mono pos">{h.rs_combined?.toFixed(3)}</span></td>
-                      <td><span className="pill pill-green">{h.pct_combined?.toFixed(0)}</span></td>
-                      <td className="mono" style={{ fontSize: 11 }}>Rs{h.close?.toLocaleString('en-IN') || '-'}</td>
-                      <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{h.weight_pct}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="table-scroll">
+                <table className="data-table">
+                  <thead>
+                    <tr><th>#</th><th>Symbol</th><th>Sector</th><th>RS Score</th><th>Pct</th><th>Close</th><th>Weight</th></tr>
+                  </thead>
+                  <tbody>
+                    {holdings.holdings?.map(h => (
+                      <tr key={h.symbol}>
+                        <td style={{ color: 'var(--txt3)', fontSize: 11 }}>{h.rank}</td>
+                        <td><span className="mono" style={{ fontWeight: 500 }}>{h.symbol}</span></td>
+                        <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{h.sector || '-'}</td>
+                        <td><span className="mono pos">{h.rs_combined?.toFixed(3)}</span></td>
+                        <td><span className="pill pill-green">{h.pct_combined?.toFixed(0)}</span></td>
+                        <td className="mono" style={{ fontSize: 11 }}>Rs{h.close?.toLocaleString('en-IN') || '-'}</td>
+                        <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{h.weight_pct}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </PaywallGate>
 
-      </div>
-    </div>
+      </div >
+    </div >
   )
 }
 
@@ -167,23 +169,25 @@ function PreviewHoldings({ preview }) {
   return (
     <div className="card">
       <div className="card-head"><div className="card-title">Top 5 Nifty 500 Holdings Preview</div></div>
-      <table className="data-table">
-        <thead><tr><th>#</th><th>Symbol</th><th>RS Pct</th></tr></thead>
-        <tbody>
-          {preview.preview?.map((p, i) => (
-            <tr key={p.symbol}>
-              <td style={{ color: 'var(--txt3)' }}>{i + 1}</td>
-              <td><span className="mono" style={{ fontWeight: 500 }}>{p.symbol}</span></td>
-              <td><span className="pill pill-green">{p.pct_combined?.toFixed(0)}</span></td>
+      <div className="table-scroll">
+        <table className="data-table">
+          <thead><tr><th>#</th><th>Symbol</th><th>RS Pct</th></tr></thead>
+          <tbody>
+            {preview.preview?.map((p, i) => (
+              <tr key={p.symbol}>
+                <td style={{ color: 'var(--txt3)' }}>{i + 1}</td>
+                <td><span className="mono" style={{ fontWeight: 500 }}>{p.symbol}</span></td>
+                <td><span className="pill pill-green">{p.pct_combined?.toFixed(0)}</span></td>
+              </tr>
+            ))}
+            <tr>
+              <td colSpan={3} style={{ textAlign: 'center', color: 'var(--txt3)', fontSize: 11, padding: 12 }}>
+                + {(preview.total_holdings || 50) - 5} more holdings - sign up to view all
+              </td>
             </tr>
-          ))}
-          <tr>
-            <td colSpan={3} style={{ textAlign: 'center', color: 'var(--txt3)', fontSize: 11, padding: 12 }}>
-              + {(preview.total_holdings || 50) - 5} more holdings - sign up to view all
-            </td>
-          </tr>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

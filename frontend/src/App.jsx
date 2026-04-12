@@ -13,7 +13,7 @@ function DashboardLayout({ children }) {
   return (
     <div className="app-shell">
       <Sidebar />
-      <div className="main-content">{children}</div>
+      {children}
     </div>
   )
 }
