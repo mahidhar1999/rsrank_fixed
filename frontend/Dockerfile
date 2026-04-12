@@ -22,8 +22,8 @@ server {
     proxy_busy_buffers_size 256k;
     # Proxy /api calls to backend
     location /api/ {
-        proxy_pass https://rsrankfixed-production.up.railway.app;
-    
+        #proxy_pass https://rsrankfixed-production.up.railway.app;
+        proxy_pass ${BACKEND_URL};
         proxy_http_version 1.1;
         proxy_set_header Connection "";
     
