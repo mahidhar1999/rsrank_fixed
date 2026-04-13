@@ -65,7 +65,7 @@ export default function Portfolio() {
       <Topbar title="Model Portfolio" />
       <div className="page-body">
 
-        {/*perf && (
+        {perf && (
           <div className="metrics-row">
             <div className="metric-card">
               <div className="metric-label">Portfolio Since 2024</div>
@@ -87,34 +87,34 @@ export default function Portfolio() {
               <div className="metric-change" style={{ color: 'var(--txt3)' }}>Equal weight 2% each</div>
             </div>
           </div>
-        )*/}
-        {/*
-       <PaywallGate preview={<PerformancePlaceholder />}>
-          {perf && (
-            <div className="card">
-              <div className="card-head">
-                <div className="card-title">Portfolio vs Nifty 500 - Monthly Returns</div>
+        )}
+        {
+          <PaywallGate preview={<PerformancePlaceholder />}>
+            {perf && (
+              <div className="card">
+                <div className="card-head">
+                  <div className="card-title">Portfolio vs Nifty 500 - Monthly Returns</div>
+                </div>
+                <div className="card-body">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <LineChart data={perf.monthly_returns?.map(m => ({
+                      month: m.month.slice(5),
+                      Portfolio: parseFloat(m.portfolio_return.toFixed(2)),
+                      'Nifty 500': parseFloat(m.nifty_return.toFixed(2)),
+                    }))}>
+                      <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
+                      <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
+                      <Tooltip formatter={(v, n) => [`${v}%`, n]} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                      <Line type="monotone" dataKey="Portfolio" stroke="#1D9E75" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="Nifty 500" stroke="#185FA5" strokeWidth={2} dot={{ r: 3 }} strokeDasharray="4 4" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-              <div className="card-body">
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={perf.monthly_returns?.map(m => ({
-                    month: m.month.slice(5),
-                    Portfolio: parseFloat(m.portfolio_return.toFixed(2)),
-                    'Nifty 500': parseFloat(m.nifty_return.toFixed(2)),
-                  }))}>
-                    <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
-                    <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
-                    <Tooltip formatter={(v, n) => [`${v}%`, n]} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Line type="monotone" dataKey="Portfolio" stroke="#1D9E75" strokeWidth={2} dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="Nifty 500" stroke="#185FA5" strokeWidth={2} dot={{ r: 3 }} strokeDasharray="4 4" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-        </PaywallGate>*/}
+            )}
+          </PaywallGate>}
 
         <PaywallGate
           preview={preview && <PreviewHoldings preview={preview} />}

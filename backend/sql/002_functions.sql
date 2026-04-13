@@ -113,40 +113,98 @@ $$;
 -- ----------------------------------------------------------------
 CREATE OR REPLACE FUNCTION compute_daily_rs(p_date DATE)
 RETURNS VOID LANGUAGE plpgsql AS $$
-DECLARE v_nifty_id INT;
+DECLARE 
+  v_nifty_id INT;
 BEGIN
   v_nifty_id := get_nifty50_id();
-  INSERT INTO rs_values (stock_id, lookback_days, trade_date, rs_vs_market, rs_vs_sector, sector_rs_vs_market)
-  SELECT u.stock_id, r_stock.lookback_days, p_date,
-    CASE WHEN r_nifty.return_value IS NOT NULL AND r_nifty.return_value > -1
-         THEN ROUND(((1 + r_stock.return_value) / (1 + r_nifty.return_value))::NUMERIC, 6) ELSE NULL END,
-    CASE WHEN r_sector.return_value IS NOT NULL AND r_sector.return_value > -1
-         THEN ROUND(((1 + r_stock.return_value) / (1 + r_sector.return_value))::NUMERIC, 6) ELSE NULL END,
-    CASE WHEN r_nifty.return_value IS NOT NULL AND r_nifty.return_value > -1
-          AND r_sector.return_value IS NOT NULL
-         THEN ROUND(((1 + r_sector.return_value) / (1 + r_nifty.return_value))::NUMERIC, 6) ELSE NULL END
-  FROM universe_daily u
-  JOIN returns r_stock ON r_stock.entity_type = 'stock' AND r_stock.entity_id = u.stock_id AND r_stock.trade_date = p_date
-  JOIN returns r_nifty ON r_nifty.entity_type = 'index' AND r_nifty.entity_id = v_nifty_id
-                       AND r_nifty.lookback_days = r_stock.lookback_days AND r_nifty.trade_date = p_date
-  LEFT JOIN stock_index_membership sim ON sim.stock_id = u.stock_id AND sim.is_primary = TRUE
-    AND sim.effective_from <= p_date AND (sim.effective_to IS NULL OR sim.effective_to >= p_date)
-  LEFT JOIN returns r_sector ON r_sector.entity_type = 'index' AND r_sector.entity_id = sim.index_id
-    AND r_sector.lookback_days = r_stock.lookback_days AND r_sector.trade_date = p_date
-  WHERE u.trade_date = p_date AND r_stock.return_value IS NOT NULL
+
+  INSERT INTO rs_values (
+    stock_id,
+    lookback_days,
+    trade_date,
+    rs_vs_market,
+    rs_vs_sector,
+    sector_rs_vs_market
+  )
+  SELECT 
+    r_stock.entity_id AS stock_id,
+    r_stock.lookback_days,
+    p_date,
+
+    -- RS vs Market
+    CASE 
+      WHEN r_nifty.return_value IS NOT NULL 
+       AND r_nifty.return_value > -1
+      THEN ROUND(((1 + r_stock.return_value) / (1 + r_nifty.return_value))::NUMERIC, 6)
+      ELSE NULL 
+    END,
+
+    -- RS vs Sector
+    CASE 
+      WHEN r_sector.return_value IS NOT NULL 
+       AND r_sector.return_value > -1
+      THEN ROUND(((1 + r_stock.return_value) / (1 + r_sector.return_value))::NUMERIC, 6)
+      ELSE NULL 
+    END,
+
+    -- Sector vs Market
+    CASE 
+      WHEN r_nifty.return_value IS NOT NULL 
+       AND r_nifty.return_value > -1
+       AND r_sector.return_value IS NOT NULL
+      THEN ROUND(((1 + r_sector.return_value) / (1 + r_nifty.return_value))::NUMERIC, 6)
+      ELSE NULL 
+    END
+
+  FROM returns r_stock
+
+  -- ✅ JOIN must come before WHERE
+  JOIN returns r_nifty 
+    ON r_nifty.entity_type = 'index' 
+   AND r_nifty.entity_id = v_nifty_id
+   AND r_nifty.lookback_days = r_stock.lookback_days 
+   AND r_nifty.trade_date = p_date
+
+  LEFT JOIN stock_index_membership sim 
+    ON sim.stock_id = r_stock.entity_id 
+   AND sim.is_primary = TRUE
+   AND sim.effective_from <= p_date 
+   AND (sim.effective_to IS NULL OR sim.effective_to >= p_date)
+
+  LEFT JOIN returns r_sector 
+    ON r_sector.entity_type = 'index' 
+   AND r_sector.entity_id = sim.index_id
+   AND r_sector.lookback_days = r_stock.lookback_days 
+   AND r_sector.trade_date = p_date
+
+  -- ✅ WHERE comes last
+  WHERE r_stock.entity_type = 'stock'
+    AND r_stock.trade_date = p_date
+    AND r_stock.return_value IS NOT NULL
+
   ON CONFLICT (stock_id, lookback_days, trade_date)
-  DO UPDATE SET rs_vs_market = EXCLUDED.rs_vs_market,
-                rs_vs_sector = EXCLUDED.rs_vs_sector,
-                sector_rs_vs_market = EXCLUDED.sector_rs_vs_market;
+  DO UPDATE SET 
+    rs_vs_market = EXCLUDED.rs_vs_market,
+    rs_vs_sector = EXCLUDED.rs_vs_sector,
+    sector_rs_vs_market = EXCLUDED.sector_rs_vs_market;
 
+
+  -- ✅ Combined RS (65 + 125)
   UPDATE rs_values v65
-  SET rs_combined = ROUND((0.75 * v65.rs_vs_market + 0.25 * v125.rs_vs_market)::NUMERIC, 6)
+  SET rs_combined = ROUND(
+      (0.75 * v65.rs_vs_market + 0.25 * v125.rs_vs_market)::NUMERIC, 6
+  )
   FROM rs_values v125
-  WHERE v65.stock_id = v125.stock_id AND v65.trade_date = p_date AND v125.trade_date = p_date
-    AND v65.lookback_days = 65 AND v125.lookback_days = 125
-    AND v65.rs_vs_market IS NOT NULL AND v125.rs_vs_market IS NOT NULL;
-END; $$;
+  WHERE v65.stock_id = v125.stock_id 
+    AND v65.trade_date = p_date 
+    AND v125.trade_date = p_date
+    AND v65.lookback_days = 65 
+    AND v125.lookback_days = 125
+    AND v65.rs_vs_market IS NOT NULL 
+    AND v125.rs_vs_market IS NOT NULL;
 
+END;
+$$;
 -- ----------------------------------------------------------------
 -- FUNCTION: compute_rs_rankings(p_date DATE)
 -- Converts RS ratios to percentile ranks 0-100
@@ -163,20 +221,21 @@ BEGIN
     rv.stock_id, 
     p_date,
 
-    ROUND((PERCENT_RANK() OVER (ORDER BY rv.rs_vs_market        NULLS FIRST) * 100)::NUMERIC, 1),
-    ROUND((PERCENT_RANK() OVER (ORDER BY rv.rs_vs_sector        NULLS FIRST) * 100)::NUMERIC, 1),
-    ROUND((PERCENT_RANK() OVER (ORDER BY rv.sector_rs_vs_market NULLS FIRST) * 100)::NUMERIC, 1),
-    ROUND((PERCENT_RANK() OVER (ORDER BY rv.rs_combined         NULLS FIRST) * 100)::NUMERIC, 1)
+    ROUND((PERCENT_RANK() OVER (ORDER BY rv.rs_vs_market) * 100)::NUMERIC, 1),
+    ROUND((PERCENT_RANK() OVER (ORDER BY rv.rs_vs_sector) * 100)::NUMERIC, 1),
+    ROUND((PERCENT_RANK() OVER (ORDER BY rv.sector_rs_vs_market) * 100)::NUMERIC, 1),
+    ROUND((PERCENT_RANK() OVER (ORDER BY rv.rs_combined) * 100)::NUMERIC, 1)
 
   FROM rs_values rv
 
-  -- ✅ APPLY UNIVERSE FILTER HERE ONLY
   JOIN universe_daily u
     ON u.stock_id = rv.stock_id
    AND u.trade_date = p_date
 
   WHERE rv.trade_date = p_date 
     AND rv.lookback_days = 65
+    AND rv.rs_vs_market IS NOT NULL   -- ✅ IMPORTANT
+    AND rv.rs_combined IS NOT NULL    -- ✅ IMPORTANT
 
   ON CONFLICT (stock_id, trade_date)
   DO UPDATE SET 
@@ -195,11 +254,14 @@ CREATE OR REPLACE FUNCTION compute_rs_acceleration(p_date DATE)
 RETURNS VOID LANGUAGE plpgsql AS $$
 BEGIN
   INSERT INTO rs_acceleration (
-    stock_id, trade_date, 
-    delta_rs_market, delta_rs_sector, delta_combined
+    stock_id,
+    trade_date,
+    delta_rs_market,
+    delta_rs_sector,
+    delta_combined
   )
   SELECT 
-    curr.stock_id, 
+    curr.stock_id,
     p_date,
 
     ROUND((curr.rs_vs_market - past.rs_vs_market)::NUMERIC, 4),
@@ -208,27 +270,30 @@ BEGIN
 
   FROM rs_values curr
 
+  -- ✅ Find past value ~10 trading days ago (safe version)
   JOIN LATERAL (
     SELECT 
-      rs2.rs_vs_market, 
-      rs2.rs_vs_sector, 
+      rs2.rs_vs_market,
+      rs2.rs_vs_sector,
       rs2.rs_combined
     FROM rs_values rs2
-    WHERE rs2.stock_id = curr.stock_id 
+    WHERE rs2.stock_id = curr.stock_id
       AND rs2.lookback_days = 65
       AND rs2.trade_date < p_date
+      AND rs2.trade_date <= p_date - INTERVAL '7 days'  -- ✅ ensures meaningful gap
       AND rs2.rs_combined IS NOT NULL
-      AND rs2.rs_vs_market IS NOT NULL   -- ✅ added safety
-    ORDER BY rs2.trade_date DESC 
-    OFFSET 9 LIMIT 1
+      AND rs2.rs_vs_market IS NOT NULL
+    ORDER BY rs2.trade_date DESC
+    LIMIT 1
   ) past ON TRUE
 
-  WHERE curr.trade_date = p_date 
-    AND curr.lookback_days = 65 
+  WHERE curr.trade_date = p_date
+    AND curr.lookback_days = 65
     AND curr.rs_combined IS NOT NULL
+    AND curr.rs_vs_market IS NOT NULL
 
   ON CONFLICT (stock_id, trade_date)
-  DO UPDATE SET 
+  DO UPDATE SET
     delta_rs_market = EXCLUDED.delta_rs_market,
     delta_rs_sector = EXCLUDED.delta_rs_sector,
     delta_combined  = EXCLUDED.delta_combined;
@@ -283,40 +348,47 @@ $$;
 -- FUNCTION: compute_daily_metrics(p_date DATE)
 -- Master orchestrator — call this from Python pipeline
 -- ----------------------------------------------------------------
-CREATE OR REPLACE FUNCTION compute_daily_metrics(p_date DATE)
-RETURNS TEXT LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION compute_leadership_stability(p_date DATE)
+RETURNS VOID LANGUAGE plpgsql AS $$
 BEGIN
+  INSERT INTO leadership_stability_30d (
+    stock_id, trade_date, stability_score
+  )
+  SELECT 
+    u.stock_id, 
+    p_date,
 
-    -- ✅ Skip non-trading days (critical fix)
-    IF NOT EXISTS (
-        SELECT 1 FROM index_prices WHERE trade_date = p_date
-    ) THEN
-        RETURN 'SKIPPED: non-trading day ' || p_date::TEXT;
-    END IF;
+    ROUND(
+      (
+        100.0 * SUM(CASE WHEN rr.pct_combined >= 70 THEN 1 ELSE 0 END)::NUMERIC
+        / NULLIF(COUNT(*), 0)
+      ), 
+      1
+    ) AS stability_score
 
-    -- Step 1: Build universe (only for ranking layer)
-    PERFORM build_universe(p_date);
+  FROM universe_daily u
 
-    -- Step 2: Compute returns (ALL stocks)
-    PERFORM compute_daily_returns(p_date);
+  JOIN LATERAL (
+    SELECT pct_combined 
+    FROM rs_rankings
+    WHERE stock_id = u.stock_id 
+      AND trade_date <= p_date
+      AND pct_combined IS NOT NULL   -- ✅ FIX
+    ORDER BY trade_date DESC 
+    LIMIT 30
+  ) rr ON TRUE
 
-    -- Step 3: Compute RS (ALL stocks)
-    PERFORM compute_daily_rs(p_date);
+  WHERE u.trade_date = p_date
 
-    -- Step 4: Rankings (filtered by universe)
-    PERFORM compute_rs_rankings(p_date);
+  GROUP BY u.stock_id
 
-    -- Step 5: Acceleration
-    PERFORM compute_rs_acceleration(p_date);
+  HAVING COUNT(*) >= 15   -- ensures meaningful history
 
-    -- Step 6: Stability
-    PERFORM compute_leadership_stability(p_date);
-
-    RETURN 'OK: computed metrics for ' || p_date::TEXT;
+  ON CONFLICT (stock_id, trade_date)
+  DO UPDATE SET stability_score = EXCLUDED.stability_score;
 
 END;
 $$;
-
 -- ----------------------------------------------------------------
 -- PROCEDURE: apply_corporate_actions()
 -- Adjusts historical prices for BONUS and SPLIT events
