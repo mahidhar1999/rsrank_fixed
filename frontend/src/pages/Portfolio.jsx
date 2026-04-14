@@ -65,7 +65,7 @@ export default function Portfolio() {
       <Topbar title="Model Portfolio" />
       <div className="page-body">
 
-        {perf && (
+        {/*perf && (
           <div className="metrics-row">
             <div className="metric-card">
               <div className="metric-label">Portfolio Since 2024</div>
@@ -87,8 +87,8 @@ export default function Portfolio() {
               <div className="metric-change" style={{ color: 'var(--txt3)' }}>Equal weight 2% each</div>
             </div>
           </div>
-        )}
-        {
+        )*/}
+        {/*
           <PaywallGate preview={<PerformancePlaceholder />}>
             {perf && (
               <div className="card">
@@ -114,7 +114,7 @@ export default function Portfolio() {
                 </div>
               </div>
             )}
-          </PaywallGate>}
+          </PaywallGate>*/}
 
         <PaywallGate
           preview={preview && <PreviewHoldings preview={preview} />}
