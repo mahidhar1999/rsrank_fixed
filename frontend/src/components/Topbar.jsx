@@ -62,10 +62,10 @@ export default function Topbar({ title }) {
               {(user.full_name || user.email)[0].toUpperCase()}
             </div>
           ) : (
-            <button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: 12 }}
+            {/*<button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: 12 }}
               onClick={() => navigate('/login')}>
               Sign in
-            </button>
+            </button>*/}
           )}
         </div>
       </div>

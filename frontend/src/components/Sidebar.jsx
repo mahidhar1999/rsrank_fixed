@@ -2,18 +2,18 @@ import { useEffect, useState } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+/*{ to: '/portfolio', label: 'Portfolio', shortLabel: 'Portfolio', Icon: ChartIcon },*/
 const NAV = [
   { to: '/', label: 'Overview', shortLabel: 'Home', Icon: GridIcon },
   { to: '/heatmap', label: 'RS Heatmap', shortLabel: 'Heatmap', Icon: HeatIcon },
   { to: '/sectors', label: 'Sector Rotation', shortLabel: 'Sectors', Icon: PieIcon },
-  { to: '/portfolio', label: 'Portfolio', shortLabel: 'Portfolio', Icon: ChartIcon },
   { to: '/acceleration', label: 'Acceleration', shortLabel: 'Momentum', Icon: TrendIcon },
   { to: '/leadership', label: 'Leadership', shortLabel: 'Leaders', Icon: StarIcon },
 ]
 
 // ── Desktop Sidebar ────────────────────────────────────────────
 export default function Sidebar() {
-  const { user, logout, isPro } = useAuth()
+  //const { user, logout, isPro } = useAuth()
   const navigate = useNavigate()
 
   return (
@@ -53,7 +53,7 @@ export default function Sidebar() {
         </nav>
 
         {/* Bottom */}
-        <div style={{ borderTop: '0.5px solid var(--border)', padding: '14px 16px' }}>
+        {/*<div style={{ borderTop: '0.5px solid var(--border)', padding: '14px 16px' }}>
           {user ? (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -65,12 +65,12 @@ export default function Sidebar() {
                   <div style={{ fontSize: 10, color: 'var(--txt3)' }}>{isPro ? '✦ Pro' : 'Free plan'}</div>
                 </div>
               </div>
-              {/*!isPro && (
+              {!isPro && (
                 <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: 6, fontSize: 12 }}
                   onClick={() => navigate('/pricing')}>
                   Upgrade to Pro
                 </button>
-              )*/}
+              )}
               <button className="btn" style={{ width: '100%', justifyContent: 'center', fontSize: 12 }} onClick={logout}>
                 Sign out
               </button>
@@ -79,6 +79,9 @@ export default function Sidebar() {
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}
               onClick={() => navigate('/login')}>Sign in</button>
           )}
+        </div>*/}
+        <div style={{ borderTop: '0.5px solid var(--border)', padding: '14px 16px' }}>
+          {/* Optional: keep empty or add branding/version */}
         </div>
       </aside>
 
@@ -187,13 +190,13 @@ function MobileDrawer({ open, onClose, user }) {
       {/* More nav items */}
       <div style={{ padding: '8px 0' }}>
         <DrawerLabel label="Analysis" />
-        <DrawerItem label="Acceleration" Icon={TrendIcon} onClick={() => go('/acceleration')} />
+        {/*<DrawerItem label="Acceleration" Icon={TrendIcon} onClick={() => go('/acceleration')} />*/}
         <DrawerItem label="Leadership" Icon={StarIcon} onClick={() => go('/leadership')} />
         {/*<DrawerItem label="Pricing" Icon={DiamondIcon} onClick={() => go('/pricing')} />*/}
       </div>
 
       {/* Account section */}
-      <div style={{ borderTop: '0.5px solid var(--border)', padding: '8px 0' }}>
+      {/*<div style={{ borderTop: '0.5px solid var(--border)', padding: '8px 0' }}>
         <DrawerLabel label="Account" />
         {user ? (
           <>
@@ -209,14 +212,14 @@ function MobileDrawer({ open, onClose, user }) {
                 <span className={`pill ${isPro ? 'pill-green' : 'pill-gray'}`}>{isPro ? 'Pro' : 'Free'}</span>
               </div>
             </div>
-            {/*!isPro && (
+            {!isPro && (
               <div style={{ padding: '0 16px 8px' }}>
                 <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}
                   onClick={() => go('/pricing')}>
                   Upgrade to Pro — ₹499/mo
                 </button>
               </div>
-            )*/}
+            )}
             <DrawerItem label="Sign out" Icon={SignOutIcon} onClick={() => { logout(); onClose() }} danger />
           </>
         ) : (
@@ -225,7 +228,7 @@ function MobileDrawer({ open, onClose, user }) {
               onClick={() => go('/login')}>Sign in</button>
           </div>
         )}
-      </div>
+      </div>*/}
     </div>
   )
 }
