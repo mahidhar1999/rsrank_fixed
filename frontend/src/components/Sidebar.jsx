@@ -110,7 +110,8 @@ function DesktopNavItem({ to, label, Icon }) {
 
 // ── Mobile bottom navigation bar ──────────────────────────────
 function MobileBottomNav() {
-  const { user } = useAuth()
+  const auth = useAuth()
+  const user = auth?.user || null
   const navigate = useNavigate()
   const location = useLocation()
   const [drawerOpen, setDrawer] = useState(false)
