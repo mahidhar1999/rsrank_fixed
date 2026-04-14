@@ -45,7 +45,7 @@ export default function Topbar({ title }) {
         <div className="topbar-avatar" style={{}}>
           {user ? (
             <div
-              onClick={() => navigate('/pricing')}
+              //onClick={() => navigate('/pricing')}
               style={{
                 width: 30, height: 30, borderRadius: '50%',
                 background: 'var(--green-light)', color: 'var(--green-dark)',
