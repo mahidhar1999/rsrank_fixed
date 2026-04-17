@@ -123,15 +123,15 @@ export default function Portfolio() {
             <div className="card">
               <div className="card-head">
                 <div>
-                  <div className="card-title">Current Holdings - {holdings.trade_date}</div>
-                  <div className="card-sub">Top 50 Nifty 500 members by RS Combined - Equal weight {holdings.weight_per_stock}%</div>
+                  <div className="card-title">Current Watchlist</div>
+                  <div className="card-sub">Top 50 Nifty 500 members by RS Combined</div>
                 </div>
                 <span className="pill pill-green">{holdings.holdings?.length} stocks</span>
               </div>
               <div className="table-scroll">
                 <table className="data-table">
                   <thead>
-                    <tr><th>#</th><th>Symbol</th><th>Sector</th><th>RS Score</th><th>Pct</th><th>Close</th><th>Weight</th></tr>
+                    <tr><th>#</th><th>Symbol</th><th>Sector</th><th>RS Score</th><th>Pct</th><th>Close</th></tr>
                   </thead>
                   <tbody>
                     {holdings.holdings?.map(h => (
@@ -142,7 +142,6 @@ export default function Portfolio() {
                         <td><span className="mono pos">{h.rs_combined?.toFixed(3)}</span></td>
                         <td><span className="pill pill-green">{h.pct_combined?.toFixed(0)}</span></td>
                         <td className="mono" style={{ fontSize: 11 }}>Rs{h.close?.toLocaleString('en-IN') || '-'}</td>
-                        <td style={{ fontSize: 11, color: 'var(--txt3)' }}>{h.weight_pct}%</td>
                       </tr>
                     ))}
                   </tbody>

@@ -6,7 +6,7 @@ const NAV = [
   { to: '/', label: 'Overview', shortLabel: 'Home', Icon: GridIcon },
   { to: '/heatmap', label: 'RS Heatmap', shortLabel: 'Heatmap', Icon: HeatIcon },
   { to: '/sectors', label: 'Sector Rotation', shortLabel: 'Sectors', Icon: PieIcon },
-  { to: '/portfolio', label: 'Portfolio', shortLabel: 'Portfolio', Icon: ChartIcon },
+  { to: '/portfolio', label: 'Watchlist', shortLabel: 'Watchlist', Icon: ChartIcon },
   { to: '/acceleration', label: 'Acceleration', shortLabel: 'Momentum', Icon: TrendIcon },
   { to: '/leadership', label: 'Leadership', shortLabel: 'Leaders', Icon: StarIcon },
 ]
